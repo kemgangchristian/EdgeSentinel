@@ -1,7 +1,6 @@
 """
-# *******************************************************
-# Chargement et validation de la configuration de l'agent Edge: `config.yaml` correspond à une dataclass Python dédiée.
-# *******************************************************
+Chargement et validation de la configuration de l'agent Edge
+`config.yaml` correspond à une dataclass Python dédiée.
 """
 
 # Permet d'écrire des types comme "int | str" même sur des versions de Python antérieures à 3.10.
@@ -104,18 +103,16 @@ class AppConfig:
     @staticmethod
     def from_yaml(path: str | Path) -> "AppConfig":
         """Charge le fichier YAML et construit un `AppConfig` validé.
-
-        Lecture brute du fichier. `yaml.safe_load` (et non `yaml.load`) pour éviter l'exécution de code arbitraire.
+        Lecture brute du fichier. `yaml.safe_load` (et non `yaml.load`)
+        pour éviter l'exécution de code arbitraire.
         """
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
         return AppConfig._build_from_raw_dict(raw, source_path=path)
 
-
     @staticmethod
     def _build_from_raw_dict(raw: dict, source_path: str | Path) -> "AppConfig":
-        """Construit les objets à partir du dictionnaire brut.
-        """
+        """Construit les objets à partir du dictionnaire brut."""
         try:
             # Les zones sont la partie la plus imbriquée : une liste de
             # dictionnaires, chacun transformé en instance `Zone`. Le
