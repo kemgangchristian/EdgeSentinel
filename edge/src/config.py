@@ -135,3 +135,43 @@ class AppConfig:
                 f"Section de configuration manquante ou invalide dans "
                 f"{source_path}: clé {exc} introuvable"
             ) from exc
+
+    @staticmethod
+    def _assemble(raw: dict, zones: List[Zone]) -> "AppConfig":
+        """
+        Chaque `raw["section"]["clé"]` correspond directement à une ligne du `config.yaml`
+        """
+        return AppConfig(
+            device_id=raw["device"]["id"],
+            camera=CameraConfig(
+                source=raw["camera"]["source"],
+                width=raw["camera"]["width"],
+                height=raw["camera"]["height"],
+                target_fps=raw["camera"]["target_fps"],
+            ),
+            detector=DetectorConfig(
+                model_path=raw["detector"]["model_path"],
+                confidence_threshold=raw["detector"]["confidence_threshold"],
+                # .get(..., []) : cette clé a une valeur par défaut dans le
+                # YAML lui-même (liste vide = "toutes les classes"), donc
+                # on tolère son absence ici plutôt que de lever une
+                # KeyError.
+                classes_of_interest=raw["detector"].get("classes_of_interest", []),
+            ),
+            tracker=TrackerConfig(
+                max_match_distance=raw["tracker"]["max_match_distance"],
+                max_frames_missing=raw["tracker"]["max_frames_missing"],
+            ),
+            event_engine=EventEngineConfig(
+                zones=zones,
+                deduplicate_events=raw["event_engine"].get("deduplicate_events", True),
+            ),
+            sinks=SinksConfig(
+                console_enabled=raw["sinks"]["console"]["enabled"],
+                file=FileSinkConfig(
+                    enabled=raw["sinks"]["file"]["enabled"],
+                    path=raw["sinks"]["file"]["path"],
+                ),
+            ),
+            log_level=raw.get("logging", {}).get("level", "INFO"),
+        )
