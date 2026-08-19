@@ -1,6 +1,5 @@
 # *******************************************************
 # infra/jenkins/docker-compose.yml — Jenkins conteneurisé
-#
 # Séparé de la plateforme applicative : Jenkins orchestre les déploiements.
 # *******************************************************
 
