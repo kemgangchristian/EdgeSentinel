@@ -19,3 +19,21 @@ class CameraConfig:
     width: int
     height: int
     target_fps: int
+
+
+@dataclass
+class DetectorConfig:
+    """Correspond à la section `detector:` du fichier YAML."""
+
+    model_path: str
+    confidence_threshold: float
+    # `field(default_factory=list)` plutôt que `= []` : en Python
+    classes_of_interest: List[int] = field(default_factory=list)
+
+
+@dataclass
+class TrackerConfig:
+    """Correspond à la section `tracker:` du fichier YAML."""
+
+    max_match_distance: float
+    max_frames_missing: int
