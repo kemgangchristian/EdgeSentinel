@@ -37,3 +37,23 @@ class TrackerConfig:
 
     max_match_distance: float
     max_frames_missing: int
+
+
+@dataclass
+class Zone:
+    """Une zone interdite définie par un polygone.
+
+    Représente UNE entrée de la liste `event_engine.zones` du YAML.
+    """
+
+    name: str
+    # Liste de points (x, y) en pixels formant le contour du polygone.
+    polygon: List[tuple[int, int]]
+
+
+@dataclass
+class EventEngineConfig:
+    """Correspond à la section `event_engine:` du fichier YAML."""
+
+    zones: List[Zone]
+    deduplicate_events: bool
