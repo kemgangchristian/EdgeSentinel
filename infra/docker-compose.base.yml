@@ -1,0 +1,18 @@
+# *******************************************************
+# infra/docker-compose.base.yml
+#
+# Fichier de STRUCTURE, commun à tous les environnements. Il définit QUELS
+# services existent et COMMENT ils sont liés entre eux — jamais les valeurs
+# qui changent par environnement (ports, mots de passe, ressources). Ces
+# valeurs vivent dans infra/{env}/docker-compose.override.yml
+# *******************************************************
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: edge-ai-mosquitto
+
+networks:
+  edge-ai-network:
+    driver: bridge
+    
