@@ -110,3 +110,28 @@ class AppConfig:
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
         return AppConfig._build_from_raw_dict(raw, source_path=path)
+
+
+    @staticmethod
+    def _build_from_raw_dict(raw: dict, source_path: str | Path) -> "AppConfig":
+        """Construit les objets à partir du dictionnaire brut.
+        """
+        try:
+            # Les zones sont la partie la plus imbriquée : une liste de
+            # dictionnaires, chacun transformé en instance `Zone`. Le
+            # polygone (liste de listes [x, y] en YAML) est converti en
+            # liste de tuples (x, y), plus adapté pour un usage
+            # géométrique immuable en Python.
+            zones = [
+                Zone(name=z["name"], polygon=[tuple(p) for p in z["polygon"]])
+                for z in raw["event_engine"]["zones"]
+            ]
+
+            # Étape 3/3 (assemblage final) : ajoutée juste après.
+            return AppConfig._assemble(raw, zones)
+
+        except KeyError as exc:
+            raise KeyError(
+                f"Section de configuration manquante ou invalide dans "
+                f"{source_path}: clé {exc} introuvable"
+            ) from exc
