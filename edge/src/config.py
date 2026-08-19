@@ -57,3 +57,44 @@ class EventEngineConfig:
 
     zones: List[Zone]
     deduplicate_events: bool
+
+
+@dataclass
+class FileSinkConfig:
+    """Correspond à la sous-section `sinks.file:` du fichier YAML."""
+
+    enabled: bool
+    path: str
+
+
+@dataclass
+class SinksConfig:
+    """Correspond à la section `sinks:` du fichier YAML.
+
+    Note : on "aplatit" volontairement `console.enabled` en un simple
+    booléen `console_enabled` plutôt que de créer une classe
+    `ConsoleSinkConfig` à un seul champ — inutile de sur-modéliser une
+    config aussi simple.
+    """
+
+    console_enabled: bool
+    file: FileSinkConfig
+
+
+@dataclass
+class AppConfig:
+    """Configuration complète de l'agent Edge — le point d'entrée unique.
+
+    Une seule instance de cette classe est créée au démarrage (voir
+    `main.py`, étape suivante) et transmise à tous les composants du
+    pipeline (caméra, détecteur, tracker, moteur de règles, sinks).
+    """
+
+    device_id: str
+    camera: CameraConfig
+    detector: DetectorConfig
+    tracker: TrackerConfig
+    event_engine: EventEngineConfig
+    sinks: SinksConfig
+    log_level: str
+
