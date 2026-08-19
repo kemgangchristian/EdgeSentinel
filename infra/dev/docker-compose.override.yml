@@ -1,0 +1,17 @@
+# =============================================================================
+# infra/dev/docker-compose.override.yml
+# Complète docker-compose.base.yml avec les valeurs spécifiques à Dev.
+# =============================================================================
+
+services:
+  mosquitto:
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./dev/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - edge-ai-network
+
+networks:
+  edge-ai-network:
+    name: edge-ai-dev-network
