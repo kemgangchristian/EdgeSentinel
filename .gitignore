@@ -1,8 +1,28 @@
-__pycache__/*.pyc
-__pycache__/*.pyd
+# *******************************************************
+# .gitignore - EdgeSentinel
+# *******************************************************
+
+# Python (agent Edge)
+__pycache__/
 *.py[cod]
 venv/
 .venv/
 *.egg-info/
 .pytest_cache/
 .coverage
+
+# Secrets et configuration locale (JAMAIS commités)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Éditeurs de code et systèmes d'exploitation
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs 
+*.log
