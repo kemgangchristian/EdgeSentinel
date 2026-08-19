@@ -8,7 +8,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List
+
+import yaml
 
 
 @dataclass
@@ -98,3 +101,12 @@ class AppConfig:
     sinks: SinksConfig
     log_level: str
 
+    @staticmethod
+    def from_yaml(path: str | Path) -> "AppConfig":
+        """Charge le fichier YAML et construit un `AppConfig` validé.
+
+        Lecture brute du fichier. `yaml.safe_load` (et non `yaml.load`) pour éviter l'exécution de code arbitraire.
+        """
+        raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+
+        return AppConfig._build_from_raw_dict(raw, source_path=path)
