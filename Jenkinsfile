@@ -22,7 +22,16 @@ pipeline {
 
         stage('Lint & Tests') {
             steps {
-                echo "[placeholder] Ici viendront black/flake8/pytest pour l'agent Edge"
+                echo "Lint et vérification du formatage de l'agent Edge"
+                dir('edge') {
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -q -r requirements-dev.txt
+                        black --check src
+                        flake8 src
+                    '''
+                }
             }
         }
 
