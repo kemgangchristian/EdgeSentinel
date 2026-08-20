@@ -34,7 +34,7 @@ pipeline {
                 }
             }
             steps {
-                echo "🔍 Lint et vérification du formatage de l'agent Edge"
+                echo "Lint et vérification du formatage de l'agent Edge"
                 dir('edge') {
                     sh '''
                         export HOME=/tmp
