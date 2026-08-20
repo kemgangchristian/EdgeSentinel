@@ -37,7 +37,10 @@ pipeline {
                 echo "🔍 Lint et vérification du formatage de l'agent Edge"
                 dir('edge') {
                     sh '''
-                        pip install -q -r requirements-dev.txt
+                        export HOME=/tmp
+                        export PIP_CACHE_DIR=/tmp/pip-cache
+                        pip install --user -q -r requirements-dev.txt
+                        export PATH=$HOME/.local/bin:$PATH
                         black --check src
                         flake8 src
                     '''
