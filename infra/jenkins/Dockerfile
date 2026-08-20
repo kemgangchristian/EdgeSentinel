@@ -27,5 +27,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends docker-ce-cli && \
     rm -rf /var/lib/apt/lists/*
 
-# Retour à l'utilisateur non-root standard de l'image Jenkins.
+RUN usermod -aG root jenkins
+
 USER jenkins
