@@ -71,3 +71,12 @@ def point_in_polygon(point: tuple[int, int], polygon: List[tuple[int, int]]) -> 
         x1, y1 = x2, y2
 
     return inside
+
+
+class EventEngine:
+    """Applique les règles de zones sur les tracks pour produire des événements."""
+
+    def __init__(self, device_id: str, config: EventEngineConfig):
+        self._device_id = device_id
+        self._zones = config.zones
+        self._deduplicate = config.deduplicate_events
