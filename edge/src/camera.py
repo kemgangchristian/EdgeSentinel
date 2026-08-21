@@ -43,8 +43,8 @@ class VideoStream:
         # Un verrou (Lock) est indispensable dès qu'un thread écrit une
         # donnée qu'un autre thread lit en parallèle — ici, le thread de
         # capture écrit _latest_frame pendant que la boucle principale
-        # (autre thread) le lit via read(). Sans lock, on risquerait de
-        # lire une frame à moitié écrite (rare mais possible en Python).
+        # (autre thread) le lit via read(). Lock évite les accès concurrents
+        # non coordonnés à l'objet partagé et les comportements difficiles à garantir.
         self._lock = threading.Lock()
 
         # Un Event plutôt qu'un simple booléen : thread-safe nativement,
