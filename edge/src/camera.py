@@ -119,3 +119,9 @@ class VideoStream:
         if self._capture is not None:
             self._capture.release()
         logger.info("VideoStream arrêté")
+
+    def __enter__(self) -> "VideoStream":
+        return self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.stop()
