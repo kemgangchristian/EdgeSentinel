@@ -43,3 +43,23 @@ class ConsoleSink(EventSink):
 
     def publish(self, event: Event) -> None:
         logger.info("📡 Événement: %s", json.dumps(event.to_dict(), ensure_ascii=False))
+
+
+class FileSink(EventSink):
+    """Ajoute chaque événement en une ligne JSON dans un fichier (format JSONL).
+
+    Le format JSONL (une ligne = un JSON valide) permet de "tailer" le
+    fichier en direct (`tail -f events.jsonl`) et de le parser ligne par
+    ligne sans charger tout le fichier en mémoire.
+    """
+
+    def __init__(self, path: str):
+        self._path = Path(path)
+        self._file = self._path.open("a", encoding="utf-8")
+
+    def publish(self, event: Event) -> None:
+        self._file.write(json.dumps(event.to_dict(), ensure_ascii=False) + "\n")
+        self._file.flush()
+
+    def close(self) -> None:
+        self._file.close()
