@@ -111,4 +111,19 @@ class CentroidTracker:
         }
 
         # Sous-étape 4/4 : ajoutée juste après.
+        
+        # Sous-étape 4/4 : les détections qui n'ont trouvé aucun track à
+        # leur proximité (donc restées dans unmatched_detections après la
+        # sous-étape 1) sont de nouveaux objets entrant dans le champ —
+        # on leur crée un track avec un ID jamais utilisé auparavant.
+        for detection in unmatched_detections:
+            new_id = next(_id_generator)
+            self._tracks[new_id] = Track(
+                track_id=new_id,
+                label=detection.label,
+                centroid=detection.centroid,
+                confidence=detection.confidence,
+                bbox=detection.bbox,
+            )
+
         return self.tracks
