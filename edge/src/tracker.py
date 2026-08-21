@@ -90,4 +90,14 @@ class CentroidTracker:
                 unmatched_detections.remove(best_detection)
 
         # Sous-étapes 2/4, 3/4, 4/4 : ajoutées juste après.
+        
+        # Sous-étape 2/4 : les tracks non appariés cette frame vieillissent
+        # d'un cran. Un track peut ne pas être apparié parce que l'objet
+        # est temporairement occulté (passe derrière un obstacle), pas
+        # forcément parce qu'il a définitivement quitté le champ.
+        for track in self._tracks.values():
+            if track.track_id not in matched_track_ids:
+                track.frames_missing += 1
+
+        # Sous-étapes 3/4, 4/4 : ajoutées juste après.
         return self.tracks
