@@ -128,5 +128,11 @@ def run(config_path: str) -> None:
                     fps = frame_count / elapsed if elapsed > 0 else 0.0
                     logger.info("Débit moyen: %.1f FPS (%d frames traitées)", fps, frame_count)
         finally:
-            # Sous-étape 3/3 : ajoutée juste après.
-            pass
+            # Ce bloc s'exécute TOUJOURS, que la boucle se termine
+            # normalement (_shutdown_requested devenu True) ou à cause
+            # d'une exception imprévue. C'est le filet de sécurité final :
+            # même si quelque chose d'inattendu casse la boucle, on ferme
+            # proprement les sinks (flush du fichier, fermeture du
+            # descripteur) avant de quitter.
+            sink.close()
+            logger.info("Agent Edge arrêté proprement.")
