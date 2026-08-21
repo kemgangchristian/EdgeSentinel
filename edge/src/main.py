@@ -37,3 +37,22 @@ def _handle_shutdown_signal(signum: int, frame: Optional[FrameType]) -> None:
     global _shutdown_requested
     logger.info("Signal d'arrêt reçu (%s), arrêt en cours...", signum)
     _shutdown_requested = True
+
+
+def build_sink(config: AppConfig) -> EventSink:
+    """Construit le sink composite à partir de la configuration.
+
+    En V2, il suffira d'ajouter un `MqttSink` ici si `config.sinks.mqtt.enabled`
+    -- le reste du pipeline n'a pas besoin d'être modifié (principe
+    ouvert/fermé appliqué concrètement).
+    """
+    sinks: list[EventSink] = []
+    if config.sinks.console_enabled:
+        sinks.append(ConsoleSink())
+    if config.sinks.file.enabled:
+        sinks.append(FileSink(config.sinks.file.path))
+
+    if not sinks:
+        logger.warning("Aucun sink actif : les événements ne seront nulle part visibles.")
+
+    return CompositeSink(sinks)
