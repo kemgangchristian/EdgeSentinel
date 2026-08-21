@@ -52,3 +52,23 @@ class VideoStream:
         # booléen qu'il faudrait aussi protéger par un lock).
         self._stopped = threading.Event()
         self._thread: Optional[threading.Thread] = None
+
+    def start(self) -> "VideoStream":
+        """Ouvre la caméra et démarre la capture en arrière-plan."""
+        self._capture = cv2.VideoCapture(self._source)
+        if not self._capture.isOpened():
+            raise RuntimeError(f"Impossible d'ouvrir la source vidéo: {self._source}")
+
+        self._capture.set(cv2.CAP_PROP_FRAME_WIDTH, self._width)
+        self._capture.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
+
+        # daemon=True : ce thread s'arrêtera automatiquement si le programme
+        # principal se termine, même si stop() n'a pas été appelé
+        # explicitement (évite un processus fantôme qui empêcherait l'arrêt
+        # propre de l'agent Edge).
+        self._thread = threading.Thread(target=self._update_loop, daemon=True)
+        self._thread.start()
+        logger.info(
+            "VideoStream démarré (source=%s, %sx%s)", self._source, self._width, self._height
+        )
+        return self
