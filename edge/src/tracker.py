@@ -57,3 +57,37 @@ class CentroidTracker:
     def tracks(self) -> List[Track]:
         """Vue en liste des tracks actuellement suivis."""
         return list(self._tracks.values())
+
+    def update(self, detections: List[Detection]) -> List[Track]:
+        """Met à jour les tracks à partir des détections de la frame courante."""
+        unmatched_detections = list(detections)
+        matched_track_ids: set[int] = set()
+
+        # Sous-étape 1/4 : appariement glouton. Pour chaque track existant,
+        # on cherche la détection la plus proche PARMI CELLES ENCORE
+        # DISPONIBLES (une détection ne peut être associée qu'à un seul
+        # track). "Glouton" signifie qu'on ne cherche pas l'appariement
+        # global optimal (ce qui serait plus coûteux à calculer) — on
+        # prend le meilleur choix track par track, dans l'ordre. Suffisant
+        # pour notre cas d'usage (peu d'objets simultanés).
+        for track in self._tracks.values():
+            best_detection = None
+            best_distance = self._max_match_distance
+
+            for detection in unmatched_detections:
+                distance = self._euclidean_distance(track.centroid, detection.centroid)
+                if distance < best_distance:
+                    best_distance = distance
+                    best_detection = detection
+
+            if best_detection is not None:
+                track.centroid = best_detection.centroid
+                track.confidence = best_detection.confidence
+                track.bbox = best_detection.bbox
+                track.label = best_detection.label
+                track.frames_missing = 0
+                matched_track_ids.add(track.track_id)
+                unmatched_detections.remove(best_detection)
+
+        # Sous-étapes 2/4, 3/4, 4/4 : ajoutées juste après.
+        return self.tracks
