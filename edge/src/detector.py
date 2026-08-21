@@ -47,3 +47,27 @@ class Detection:
         pour associer les détections d'une frame à l'autre."""
         x1, y1, x2, y2 = self.bbox
         return (x1 + x2) // 2, (y1 + y2) // 2
+
+
+class YoloDetector:
+    """Encapsule un modèle YOLOv8 pour produire une liste de `Detection`."""
+
+    def __init__(
+        self,
+        model_path: str,
+        confidence_threshold: float = 0.5,
+        classes_of_interest: Optional[List[int]] = None,
+    ):
+        # Import DIFFÉRÉ (lazy import), volontaire : Ultralytics et sa
+        # dépendance PyTorch sont des librairies lourdes (plusieurs centaines
+        # de Mo, plusieurs secondes de chargement). En les important ici,
+        # à l'INTÉRIEUR du constructeur, plutôt qu'en haut du fichier, on
+        # évite de payer ce coût dès qu'on fait un simple `import detector`
+        # — par exemple dans nos tests unitaires du tracker ou de
+        # l'event_engine, qui n'ont jamais besoin d'un vrai modèle YOLO.
+        from ultralytics import YOLO
+
+        logger.info("Chargement du modèle YOLO: %s", model_path)
+        self._model = YOLO(model_path)
+        self._confidence_threshold = confidence_threshold
+        self._classes_of_interest = classes_of_interest or None
