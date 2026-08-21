@@ -63,3 +63,21 @@ class FileSink(EventSink):
 
     def close(self) -> None:
         self._file.close()
+
+
+class CompositeSink(EventSink):
+    """Diffuse chaque événement vers plusieurs sinks à la fois."""
+
+    def __init__(self, sinks: list[EventSink]):
+        self._sinks = sinks
+
+    def publish(self, event: Event) -> None:
+        for sink in self._sinks:
+            try:
+                sink.publish(event)
+            except Exception:  # noqa: BLE001 - un sink en erreur ne doit pas bloquer les autres
+                logger.exception("Échec de publication vers %s", type(sink).__name__)
+
+    def close(self) -> None:
+        for sink in self._sinks:
+            sink.close()
