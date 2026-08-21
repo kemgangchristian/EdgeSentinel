@@ -71,3 +71,42 @@ class YoloDetector:
         self._model = YOLO(model_path)
         self._confidence_threshold = confidence_threshold
         self._classes_of_interest = classes_of_interest or None
+
+    def detect(self, frame: np.ndarray) -> List[Detection]:
+        """Exécute l'inférence sur une frame et retourne les détections filtrées."""
+        results = self._model.predict(
+            source=frame,
+            conf=self._confidence_threshold,
+            classes=self._classes_of_interest,
+            # verbose=False : Ultralytics affiche par défaut une ligne de
+            # log détaillée à CHAQUE frame traitée (dimensions, temps
+            # d'inférence...). À 15 FPS, ça inonderait nos logs en quelques
+            # secondes — on garde le contrôle du logging via notre propre
+            # `logger`, pas celui d'Ultralytics.
+            verbose=False,
+        )
+
+        detections: List[Detection] = []
+        if not results:
+            return detections
+
+        # results[0] : Ultralytics retourne une liste de résultats (un par
+        # image passée en entrée) — ici on ne passe qu'une seule frame à la
+        # fois, donc toujours l'élément [0].
+        boxes = results[0].boxes
+        for box in boxes:
+            class_id = int(box.cls[0])
+            confidence = float(box.conf[0])
+            x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+            label = COCO_CLASS_NAMES.get(class_id, f"class_{class_id}")
+
+            detections.append(
+                Detection(
+                    class_id=class_id,
+                    label=label,
+                    confidence=confidence,
+                    bbox=(x1, y1, x2, y2),
+                )
+            )
+
+        return detections
