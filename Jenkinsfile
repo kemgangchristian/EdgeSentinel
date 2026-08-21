@@ -21,8 +21,30 @@ pipeline {
         }
 
         stage('Lint & Tests') {
+            // Ce stage a besoin de Python — on utilise une image Docker
+            // dédiée plutôt que d'installer Python dans Jenkins lui-même.
+            // Jenkins reste un simple orchestrateur ; chaque stage choisit
+            // l'environnement adapté à son besoin.
+            agent {
+                docker {
+                    image 'python:3.11-slim'
+                    // Réutilise le Jenkins existant comme "agent" hôte
+                    // pour lancer ce conteneur (via le docker.sock monté).
+                    reuseNode true
+                }
+            }
             steps {
-                echo "[placeholder] Ici viendront black/flake8/pytest pour l'agent Edge"
+                echo "Lint et vérification du formatage de l'agent Edge"
+                dir('edge') {
+                    sh '''
+                        export HOME=/tmp
+                        export PIP_CACHE_DIR=/tmp/pip-cache
+                        pip install --user -q -r requirements-dev.txt
+                        export PATH=$HOME/.local/bin:$PATH
+                        black --check src
+                        flake8 src
+                    '''
+                }
             }
         }
 
