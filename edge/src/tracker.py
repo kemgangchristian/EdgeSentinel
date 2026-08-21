@@ -41,3 +41,19 @@ class Track:
     # zone, NOT_YET_EVALUATED = jamais évalué). Utilisé par l'event_engine
     # (prochain fichier) pour détecter les transitions d'état.
     last_zone: str | None = field(default=NOT_YET_EVALUATED)
+
+
+class CentroidTracker:
+    """Associe les détections d'une frame aux tracks existants."""
+
+    def __init__(self, max_match_distance: float, max_frames_missing: int):
+        self._max_match_distance = max_match_distance
+        self._max_frames_missing = max_frames_missing
+        # Dictionnaire plutôt que liste : permet de retrouver/mettre à jour
+        # un track par son ID en O(1), utile dans les étapes suivantes.
+        self._tracks: Dict[int, Track] = {}
+
+    @property
+    def tracks(self) -> List[Track]:
+        """Vue en liste des tracks actuellement suivis."""
+        return list(self._tracks.values())
