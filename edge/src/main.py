@@ -88,3 +88,45 @@ def run(config_path: str) -> None:
     # intercepté proprement.
     signal.signal(signal.SIGINT, _handle_shutdown_signal)
     signal.signal(signal.SIGTERM, _handle_shutdown_signal)
+
+    frame_count = 0
+    fps_window_start = time.monotonic()
+
+    # `with VideoStream(...) as stream:` -- le context manager (__enter__/
+    # __exit__) garantit que la caméra sera libérée proprement même si une
+    # exception survient au milieu de la boucle.
+    with VideoStream(
+        source=config.camera.source,
+        width=config.camera.width,
+        height=config.camera.height,
+        target_fps=config.camera.target_fps,
+    ) as stream:
+        try:
+            while not _shutdown_requested:
+                frame = stream.read()
+                if frame is None:
+                    # Aucune frame encore disponible (juste après le
+                    # démarrage) -- on attend un court instant plutôt que
+                    # de boucler frénétiquement sur du vide.
+                    time.sleep(0.05)
+                    continue
+
+                # Le pipeline complet, en une seule ligne lisible : chaque
+                # étape transforme la sortie de la précédente. C'est
+                # littéralement l'enchaînement Caméra -> YOLO -> Tracker ->
+                # Event Engine -> Sinks qu'on a construit fichier par fichier.
+                detections = detector.detect(frame)
+                tracks = tracker.update(detections)
+                events = event_engine.process(tracks)
+
+                for event in events:
+                    sink.publish(event)
+
+                frame_count += 1
+                if frame_count % 100 == 0:
+                    elapsed = time.monotonic() - fps_window_start
+                    fps = frame_count / elapsed if elapsed > 0 else 0.0
+                    logger.info("Débit moyen: %.1f FPS (%d frames traitées)", fps, frame_count)
+        finally:
+            # Sous-étape 3/3 : ajoutée juste après.
+            pass
