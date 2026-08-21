@@ -98,3 +98,10 @@ class VideoStream:
             sleep_time = self._min_frame_interval - elapsed
             if sleep_time > 0:
                 time.sleep(sleep_time)
+
+    def read(self) -> Optional[np.ndarray]:
+        """Retourne une copie de la dernière frame disponible (ou None)."""
+        with self._lock:
+            if self._latest_frame is None:
+                return None
+            return self._latest_frame.copy()
