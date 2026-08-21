@@ -87,3 +87,38 @@ class EventEngine:
             if point_in_polygon(point, zone.polygon):
                 return zone.name
         return None
+
+    def process(self, tracks: List[Track]) -> List[Event]:
+        """Évalue chaque track et retourne la liste des nouveaux événements."""
+        events: List[Event] = []
+
+        for track in tracks:
+            current_zone = self._zone_containing(track.centroid)
+
+            # C'est ICI que le sentinel NOT_YET_EVALUATED (défini dans
+            # tracker.py) entre en jeu : `current_zone` (résultat de
+            # _zone_containing) est toujours soit un nom de zone, soit
+            # None -- jamais NOT_YET_EVALUATED. Donc pour un track flambant
+            # neuf (track.last_zone == NOT_YET_EVALUATED), la comparaison
+            # sera TOUJOURS différente, garantissant que son tout premier
+            # événement est bien généré, même si current_zone vaut None.
+            state_changed = current_zone != track.last_zone
+            if self._deduplicate and not state_changed:
+                continue  # Rien de nouveau pour ce track, on évite le flood.
+
+            track.last_zone = current_zone
+
+            event_type = "INTRUSION" if current_zone is not None else "PERSON_DETECTED"
+            events.append(
+                Event(
+                    device_id=self._device_id,
+                    event_type=event_type,
+                    confidence=track.confidence,
+                    zone=current_zone,
+                    timestamp=self._now_iso8601(),
+                    track_id=track.track_id,
+                )
+            )
+            logger.debug("Événement généré: %s", event_type)
+
+        return events
