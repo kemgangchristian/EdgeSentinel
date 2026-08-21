@@ -80,3 +80,10 @@ class EventEngine:
         self._device_id = device_id
         self._zones = config.zones
         self._deduplicate = config.deduplicate_events
+
+    def _zone_containing(self, point: tuple[int, int]) -> Optional[str]:
+        """Retourne le nom de la première zone contenant ce point, ou None."""
+        for zone in self._zones:
+            if point_in_polygon(point, zone.polygon):
+                return zone.name
+        return None
