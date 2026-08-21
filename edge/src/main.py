@@ -136,3 +136,19 @@ def run(config_path: str) -> None:
             # descripteur) avant de quitter.
             sink.close()
             logger.info("Agent Edge arrêté proprement.")
+
+
+def main() -> None:
+    """Point d'entrée en ligne de commande."""
+    parser = argparse.ArgumentParser(description="Agent Edge AI Monitor")
+    parser.add_argument(
+        "--config",
+        default="config/config.yaml",
+        help="Chemin vers le fichier de configuration YAML",
+    )
+    args = parser.parse_args()
+    run(args.config)
+
+
+if __name__ == "__main__":
+    main()
