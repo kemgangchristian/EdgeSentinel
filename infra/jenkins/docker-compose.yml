@@ -5,9 +5,7 @@
 
 services:
   jenkins:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: jenkins/jenkins:lts-jdk17
     container_name: edgesentinel-jenkins
     restart: unless-stopped
     env_file:
@@ -24,3 +22,4 @@ services:
 
 volumes:
   jenkins_home:
+  
