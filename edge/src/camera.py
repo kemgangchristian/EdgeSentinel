@@ -72,3 +72,29 @@ class VideoStream:
             "VideoStream démarré (source=%s, %sx%s)", self._source, self._width, self._height
         )
         return self
+
+    def _update_loop(self) -> None:
+        """Boucle exécutée dans le thread : lit en continu la dernière frame."""
+        while not self._stopped.is_set():
+            start = time.monotonic()
+            ok, frame = self._capture.read()
+            if not ok:
+                # Échec ponctuel de lecture (caméra débranchée un instant,
+                # flux réseau RTSP qui hoquette...) : on ne lève PAS
+                # d'exception ici, ce n'est pas fatal — on retente à la
+                # prochaine itération, après une courte pause.
+                logger.warning("Lecture de frame échouée, nouvelle tentative...")
+                time.sleep(0.1)
+                continue
+
+            with self._lock:
+                self._latest_frame = frame
+
+            # Cadencement : si la lecture a été plus rapide que l'intervalle
+            # cible (caméra rapide, peu de traitement), on attend le temps
+            # restant pour ne pas lire plus vite que target_fps ne le demande
+            # (évite de saturer le CPU inutilement).
+            elapsed = time.monotonic() - start
+            sleep_time = self._min_frame_interval - elapsed
+            if sleep_time > 0:
+                time.sleep(sleep_time)
