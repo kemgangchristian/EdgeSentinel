@@ -127,3 +127,8 @@ class CentroidTracker:
             )
 
         return self.tracks
+
+    @staticmethod
+    def _euclidean_distance(p1: tuple[int, int], p2: tuple[int, int]) -> float:
+        """Distance euclidienne classique entre deux points 2D."""
+        return math.dist(p1, p2)
