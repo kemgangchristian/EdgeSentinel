@@ -43,6 +43,7 @@ pipeline {
                         export PATH=$HOME/.local/bin:$PATH
                         black --check src
                         flake8 src
+                        pytest tests/ -v
                     '''
                 }
             }
