@@ -89,14 +89,5 @@ class CentroidTracker:
                 matched_track_ids.add(track.track_id)
                 unmatched_detections.remove(best_detection)
 
-        # Sous-étape 3/4 : on supprime les tracks perdus depuis trop
-        # longtemps — l'objet a très probablement quitté définitivement le
-        # champ de la caméra, on arrête de le suivre.
-        self._tracks = {
-            tid: t
-            for tid, t in self._tracks.items()
-            if t.frames_missing <= self._max_frames_missing
-        }
-
-        # Sous-étape 4/4 : ajoutée juste après.
+        # Sous-étapes 2/4, 3/4, 4/4 : ajoutées juste après.
         return self.tracks
