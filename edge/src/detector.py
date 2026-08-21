@@ -28,3 +28,22 @@ COCO_CLASS_NAMES = {
     15: "cat",
     16: "dog",
 }
+
+
+@dataclass(frozen=True)
+class Detection:
+    """Une détection unique retournée par le modèle sur une frame."""
+
+    class_id: int
+    label: str
+    confidence: float
+    # Bounding box au format (x1, y1, x2, y2) en pixels — coin supérieur
+    # gauche et coin inférieur droit du rectangle englobant l'objet détecté.
+    bbox: tuple[int, int, int, int]
+
+    @property
+    def centroid(self) -> tuple[int, int]:
+        """Point central de la bounding box — utilisé par le tracker (prochain fichier)
+        pour associer les détections d'une frame à l'autre."""
+        x1, y1, x2, y2 = self.bbox
+        return (x1 + x2) // 2, (y1 + y2) // 2
