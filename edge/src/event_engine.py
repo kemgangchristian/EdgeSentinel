@@ -122,3 +122,8 @@ class EventEngine:
             logger.debug("Événement généré: %s", event_type)
 
         return events
+
+    @staticmethod
+    def _now_iso8601() -> str:
+        """Horodatage UTC au format ISO 8601, cohérent avec le contrat d'événement."""
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
