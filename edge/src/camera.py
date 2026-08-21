@@ -105,3 +105,17 @@ class VideoStream:
             if self._latest_frame is None:
                 return None
             return self._latest_frame.copy()
+
+    def stop(self) -> None:
+        """Arrête proprement le thread de capture et libère la caméra."""
+        self._stopped.set()
+        if self._thread is not None:
+            # join() attend que le thread se termine réellement avant de
+            # continuer — sans ça, on pourrait tenter de libérer la caméra
+            # (self._capture.release()) PENDANT que le thread essaie encore
+            # de lire dessus, provoquant une erreur ou un comportement
+            # indéfini.
+            self._thread.join(timeout=2.0)
+        if self._capture is not None:
+            self._capture.release()
+        logger.info("VideoStream arrêté")
