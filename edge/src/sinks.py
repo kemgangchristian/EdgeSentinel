@@ -36,3 +36,10 @@ class EventSink(ABC):
         Implémentation par défaut vide : tous les sinks n'ont pas besoin
         de nettoyage (ex: ConsoleSink), donc ce n'est pas abstrait.
         """
+
+
+class ConsoleSink(EventSink):
+    """Affiche les événements dans les logs — utile en développement/démo."""
+
+    def publish(self, event: Event) -> None:
+        logger.info("📡 Événement: %s", json.dumps(event.to_dict(), ensure_ascii=False))
