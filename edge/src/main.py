@@ -56,3 +56,35 @@ def build_sink(config: AppConfig) -> EventSink:
         logger.warning("Aucun sink actif : les événements ne seront nulle part visibles.")
 
     return CompositeSink(sinks)
+
+
+def run(config_path: str) -> None:
+    """Point d'entrée principal : initialise et lance le pipeline complet."""
+    config = AppConfig.from_yaml(config_path)
+
+    logging.basicConfig(
+        level=config.log_level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+    logger.info("Démarrage de l'agent Edge — device_id=%s", config.device_id)
+
+    # Chaque composant du pipeline est construit ici, une seule fois, à
+    # partir de la configuration -- pas de "magie" cachée, on voit
+    # explicitement tout ce qui compose le système.
+    detector = YoloDetector(
+        model_path=config.detector.model_path,
+        confidence_threshold=config.detector.confidence_threshold,
+        classes_of_interest=config.detector.classes_of_interest,
+    )
+    tracker = CentroidTracker(
+        max_match_distance=config.tracker.max_match_distance,
+        max_frames_missing=config.tracker.max_frames_missing,
+    )
+    event_engine = EventEngine(device_id=config.device_id, config=config.event_engine)
+    sink = build_sink(config)
+
+    # Les signal handlers doivent être enregistrés AVANT de démarrer la
+    # boucle -- sinon un Ctrl+C pendant l'initialisation ne serait pas
+    # intercepté proprement.
+    signal.signal(signal.SIGINT, _handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, _handle_shutdown_signal)
