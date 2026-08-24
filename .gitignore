@@ -30,3 +30,6 @@ Thumbs.db
 # Modèles IA téléchargés (régénérés automatiquement)
 edge/*.pt
 edge/*.onnx
+
+# --- Fichiers d'événements générés à l'exécution (edge/events.jsonl) ---
+edge/events.jsonl
