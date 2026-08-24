@@ -53,5 +53,13 @@ sinks:
     enabled: true
     path: "events.jsonl"
 
+recorder:
+  # Si activé, une image annotée (bounding box + zone) est sauvegardée
+  # localement à chaque événement généré par l'event_engine.
+  enabled: true
+  # Dossier de sortie, relatif au répertoire d'exécution de l'agent
+  # (edge/). Créé automatiquement s'il n'existe pas.
+  output_dir: "captures"
+
 logging:
   level: "INFO"
