@@ -33,3 +33,39 @@ class EventRecorder:
         # fois sur le même dossier de captures).
         self._output_dir.mkdir(parents=True, exist_ok=True)
         logger.info("EventRecorder initialisé, sortie: %s", self._output_dir)
+
+    def record(self, frame: np.ndarray, track: Track, event: Event) -> Path:
+        """Dessine la bounding box annotée et sauvegarde l'image.
+
+        Retourne le chemin du fichier créé -- utile pour plus tard
+        (par exemple joindre ce chemin à l'événement publié via MQTT en V2).
+        """
+        annotated = frame.copy()
+
+        x1, y1, x2, y2 = track.bbox
+        # Couleur au format BGR (pas RGB -- convention OpenCV historique) :
+        # rouge pour une intrusion (alerte), vert pour une simple détection.
+        color = (0, 0, 255) if event.event_type == "INTRUSION" else (0, 200, 0)
+
+        cv2.rectangle(annotated, (x1, y1), (x2, y2), color, thickness=2)
+
+        label = f"{event.event_type} {event.confidence:.0%}"
+        if event.zone:
+            label += f" [{event.zone}]"
+
+        # Le texte est positionné juste au-dessus du rectangle. max(y1-10, 20)
+        # évite que le texte sorte du cadre de l'image si la détection est
+        # tout en haut de la frame (y1 proche de 0).
+        text_y = max(y1 - 10, 20)
+        cv2.putText(
+            annotated,
+            label,
+            (x1, text_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            color,
+            thickness=2,
+        )
+
+        # Sous-étape 2/2 : sauvegarde du fichier, ajoutée juste après.
+        return self._save(annotated, event)
