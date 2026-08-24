@@ -82,6 +82,13 @@ class SinksConfig:
     console_enabled: bool
     file: FileSinkConfig
 
+@dataclass
+class RecorderConfig:
+    """Correspond à la section `recorder:` du fichier YAML."""
+
+    enabled: bool
+    output_dir: str
+
 
 @dataclass
 class AppConfig:
@@ -98,6 +105,7 @@ class AppConfig:
     tracker: TrackerConfig
     event_engine: EventEngineConfig
     sinks: SinksConfig
+    recorder: RecorderConfig
     log_level: str
 
     @staticmethod
@@ -169,6 +177,10 @@ class AppConfig:
                     enabled=raw["sinks"]["file"]["enabled"],
                     path=raw["sinks"]["file"]["path"],
                 ),
+            ),
+            recorder=RecorderConfig(
+                enabled=raw.get("recorder", {}).get("enabled", False),
+                output_dir=raw.get("recorder", {}).get("output_dir", "captures"),
             ),
             log_level=raw.get("logging", {}).get("level", "INFO"),
         )
