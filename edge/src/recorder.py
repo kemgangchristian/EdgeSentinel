@@ -69,3 +69,19 @@ class EventRecorder:
 
         # Sous-étape 2/2 : sauvegarde du fichier, ajoutée juste après.
         return self._save(annotated, event)
+
+    def _save(self, annotated: np.ndarray, event: Event) -> Path:
+        """Sauvegarde l'image annotée avec un nom de fichier unique et lisible."""
+        # Format : {device_id}_{event_type}_{timestamp}_{track_id}.jpg
+        # -- lisible, triable chronologiquement (timestamp en premier après
+        # le device), et suffisamment unique pour ne jamais s'écraser entre
+        # deux événements proches (track_id différencie deux personnes
+        # détectées à la même seconde).
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        filename = f"{event.device_id}_{event.event_type}_{timestamp}_track{event.track_id}.jpg"
+        filepath = self._output_dir / filename
+
+        cv2.imwrite(str(filepath), annotated)
+        logger.info("📸 Capture enregistrée: %s", filepath)
+
+        return filepath
