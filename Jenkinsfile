@@ -27,9 +27,7 @@ pipeline {
             // l'environnement adapté à son besoin.
             agent {
                 docker {
-                    image 'python:3.11-slim'
-                    // Réutilise le Jenkins existant comme "agent" hôte
-                    // pour lancer ce conteneur (via le docker.sock monté).
+                    image 'ghcr.io/kemgangchristian/edgesentinel-ci-python:3.11'
                     reuseNode true
                 }
             }

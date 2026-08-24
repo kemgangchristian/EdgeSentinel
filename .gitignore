@@ -33,3 +33,6 @@ edge/*.onnx
 
 # --- Fichiers d'événements générés à l'exécution (edge/events.jsonl) ---
 edge/events.jsonl
+
+# --- Captures d'événements générées à l'exécution (edge/captures/) ---
+edge/captures/

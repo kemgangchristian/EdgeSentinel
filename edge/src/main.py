@@ -21,6 +21,7 @@ from .camera import VideoStream
 from .config import AppConfig
 from .detector import YoloDetector
 from .event_engine import EventEngine
+from .recorder import EventRecorder
 from .sinks import CompositeSink, ConsoleSink, EventSink, FileSink
 from .tracker import CentroidTracker
 
@@ -83,6 +84,11 @@ def run(config_path: str) -> None:
     event_engine = EventEngine(device_id=config.device_id, config=config.event_engine)
     sink = build_sink(config)
 
+    # Le recorder est optionnel -- None si désactivé dans la config, pour
+    # éviter de créer un dossier et solliciter cv2.imwrite() inutilement
+    # si la fonctionnalité n'est pas voulue.
+    recorder = EventRecorder(config.recorder.output_dir) if config.recorder.enabled else None
+
     # Les signal handlers doivent être enregistrés AVANT de démarrer la
     # boucle -- sinon un Ctrl+C pendant l'initialisation ne serait pas
     # intercepté proprement.
@@ -121,6 +127,13 @@ def run(config_path: str) -> None:
 
                 for event in events:
                     sink.publish(event)
+                    if recorder is not None:
+                        # Retrouve le track correspondant à cet événement
+                        # pour disposer de sa bbox (l'Event ne contient
+                        # volontairement pas de coordonnées géométriques).
+                        track = next((t for t in tracks if t.track_id == event.track_id), None)
+                        if track is not None:
+                            recorder.record(frame, track, event)
 
                 frame_count += 1
                 if frame_count % 100 == 0:
