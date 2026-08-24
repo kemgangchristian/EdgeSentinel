@@ -82,6 +82,7 @@ class SinksConfig:
     console_enabled: bool
     file: FileSinkConfig
 
+
 @dataclass
 class RecorderConfig:
     """Correspond à la section `recorder:` du fichier YAML."""
