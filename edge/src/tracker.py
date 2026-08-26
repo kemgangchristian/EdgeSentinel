@@ -12,6 +12,9 @@ from dataclasses import dataclass, field
 from itertools import count
 from typing import Dict, List
 
+import numpy as np
+from scipy.optimize import linear_sum_assignment
+
 from .detector import Detection
 
 # Générateur d'identifiants uniques et croissants pour les nouveaux tracks.
@@ -63,31 +66,58 @@ class CentroidTracker:
         unmatched_detections = list(detections)
         matched_track_ids: set[int] = set()
 
-        # Sous-étape 1/4 : appariement glouton. Pour chaque track existant,
-        # on cherche la détection la plus proche PARMI CELLES ENCORE
-        # DISPONIBLES (une détection ne peut être associée qu'à un seul
-        # track). "Glouton" signifie qu'on ne cherche pas l'appariement
-        # global optimal (ce qui serait plus coûteux à calculer) — on
-        # prend le meilleur choix track par track, dans l'ordre. Suffisant
-        # pour notre cas d'usage (peu d'objets simultanés).
-        for track in self._tracks.values():
-            best_detection = None
-            best_distance = self._max_match_distance
+        # Sous-étape 1/4 : appariement OPTIMAL par l'algorithme hongrois.
+        # Contrairement à l'ancien algorithme glouton (qui associait
+        # track par track, dans l'ordre, sans recul), on calcule ici
+        # l'appariement qui minimise la SOMME TOTALE des distances sur
+        # l'ensemble des tracks et détections -- ce qui évite les échanges
+        # d'identité (ID swap) lorsque deux objets se croisent, prouvé
+        # par le test TestCentroidTrackerCrossing.
+        existing_tracks = list(self._tracks.values())
 
-            for detection in unmatched_detections:
-                distance = self._euclidean_distance(track.centroid, detection.centroid)
-                if distance < best_distance:
-                    best_distance = distance
-                    best_detection = detection
+        if existing_tracks and unmatched_detections:
+            # Matrice de coûts : cost_matrix[i][j] = distance entre le
+            # track i et la détection j. linear_sum_assignment cherche
+            # l'affectation qui MINIMISE la somme des coûts sélectionnés.
+            cost_matrix = np.array(
+                [
+                    [
+                        self._euclidean_distance(track.centroid, detection.centroid)
+                        for detection in unmatched_detections
+                    ]
+                    for track in existing_tracks
+                ]
+            )
 
-            if best_detection is not None:
-                track.centroid = best_detection.centroid
-                track.confidence = best_detection.confidence
-                track.bbox = best_detection.bbox
-                track.label = best_detection.label
+            # row_ind[k] / col_ind[k] : le track d'indice row_ind[k] est
+            # apparié à la détection d'indice col_ind[k], pour chaque k
+            # de l'appariement optimal trouvé.
+            row_indices, col_indices = linear_sum_assignment(cost_matrix)
+
+            matched_detection_indices = set()
+            for row, col in zip(row_indices, col_indices):
+                distance = cost_matrix[row][col]
+                # Le seuil max_match_distance s'applique toujours : un
+                # appariement "optimal" mais trop éloigné reste rejeté.
+                if distance > self._max_match_distance:
+                    continue
+
+                track = existing_tracks[row]
+                detection = unmatched_detections[col]
+
+                track.centroid = detection.centroid
+                track.confidence = detection.confidence
+                track.bbox = detection.bbox
+                track.label = detection.label
                 track.frames_missing = 0
                 matched_track_ids.add(track.track_id)
-                unmatched_detections.remove(best_detection)
+                matched_detection_indices.add(col)
+
+            # Retire les détections appariées, dans l'ordre inverse pour
+            # ne pas décaler les indices des éléments restants pendant
+            # la suppression.
+            for col in sorted(matched_detection_indices, reverse=True):
+                unmatched_detections.pop(col)
 
         # Sous-étapes 2/4, 3/4, 4/4 : ajoutées juste après.
 
