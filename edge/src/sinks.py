@@ -110,3 +110,19 @@ class MqttSink(EventSink):
         self._client.loop_start()
 
         logger.info("MqttSink connecté à %s:%s, topic=%s", host, port, self._topic)
+
+    def publish(self, event: Event) -> None:
+        payload = json.dumps(event.to_dict(), ensure_ascii=False)
+        result = self._client.publish(self._topic, payload, qos=self._qos)
+        # rc (return code) différent de MQTT_ERR_SUCCESS signifie que la
+        # publication a échoué à être mise en file d'attente localement
+        # (pas nécessairement reçue par le broker -- avec QoS 1, la vraie
+        # confirmation de livraison est asynchrone, gérée en interne par
+        # paho-mqtt via loop_start()).
+        if result.rc != mqtt.MQTT_ERR_SUCCESS:
+            logger.warning("Échec de mise en file MQTT (code %s)", result.rc)
+
+    def close(self) -> None:
+        self._client.loop_stop()
+        self._client.disconnect()
+        logger.info("MqttSink déconnecté")
