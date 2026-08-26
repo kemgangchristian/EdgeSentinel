@@ -92,6 +92,17 @@ class RecorderConfig:
 
 
 @dataclass
+class MqttConfig:
+    """Correspond à la section `mqtt:` du fichier YAML."""
+
+    enabled: bool
+    host: str
+    port: int
+    topic: str
+    qos: int
+
+
+@dataclass
 class AppConfig:
     """Configuration complète de l'agent Edge — le point d'entrée unique.
 
@@ -107,6 +118,7 @@ class AppConfig:
     event_engine: EventEngineConfig
     sinks: SinksConfig
     recorder: RecorderConfig
+    mqtt: MqttConfig
     log_level: str
 
     @staticmethod
@@ -182,6 +194,13 @@ class AppConfig:
             recorder=RecorderConfig(
                 enabled=raw.get("recorder", {}).get("enabled", False),
                 output_dir=raw.get("recorder", {}).get("output_dir", "captures"),
+            ),
+            mqtt=MqttConfig(
+                enabled=raw.get("mqtt", {}).get("enabled", False),
+                host=raw.get("mqtt", {}).get("host", "localhost"),
+                port=raw.get("mqtt", {}).get("port", 1883),
+                topic=raw.get("mqtt", {}).get("topic", "edge/{device_id}/events"),
+                qos=raw.get("mqtt", {}).get("qos", 1),
             ),
             log_level=raw.get("logging", {}).get("level", "INFO"),
         )
