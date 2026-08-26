@@ -63,3 +63,17 @@ recorder:
 
 logging:
   level: "INFO"
+
+mqtt:
+  enabled: false
+  # Host du broker Mosquitto. "localhost" convient en Dev (le conteneur
+  # expose le port 1883 sur la machine hôte). En Prod, ce sera l'adresse
+  # réelle du broker.
+  host: "localhost"
+  port: 1883
+  # Format du topic, {device_id} est substitué à l'exécution.
+  topic: "edge/{device_id}/events"
+  # QoS 1 : le message est garanti livré au moins une fois (avec
+  # accusé de réception), un compromis raisonnable entre fiabilité et
+  # simplicité pour ce cas d'usage (pas besoin de QoS 2 / exactly-once).
+  qos: 1
