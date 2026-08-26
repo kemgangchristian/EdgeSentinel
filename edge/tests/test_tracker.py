@@ -73,3 +73,41 @@ class TestCentroidTracker:
         tracker.update([])
 
         assert len(tracker.tracks) == 0
+
+
+class TestCentroidTrackerCrossing:
+    """Reproduit un croisement RÉALISTE (petits déplacements par frame,
+    écart vertical net) pour vérifier que le tracking reste stable.
+
+    Note de conception : avec de GRANDS déplacements par frame (position
+    quasi superposée puis un saut de 100+ px), même l'algorithme hongrois
+    peut "légitimement" préférer un échange si la somme des distances
+    diagonales est mathématiquement plus courte -- ce n'est pas un bug,
+    c'est une ambiguïté géométrique réelle sans information de vitesse.
+    Ce test utilise donc des pas plus petits, représentatifs d'un
+    croisement filmé à un FPS raisonnable.
+    """
+
+    def test_crossing_paths_with_small_steps_should_not_swap_identities(self):
+        tracker = CentroidTracker(max_match_distance=60, max_frames_missing=5)
+
+        # Écart vertical net (100px) qui persiste tout du long -- A reste
+        # nettement au-dessus de B, seule leur position X se croise.
+        tracker.update([make_detection(50, 50), make_detection(250, 150)])
+        id_a = tracker.tracks[0].track_id if tracker.tracks[0].centroid == (50, 50) else tracker.tracks[1].track_id
+        id_b = tracker.tracks[0].track_id if tracker.tracks[0].centroid == (250, 150) else tracker.tracks[1].track_id
+
+        # Déplacements de 40px par frame seulement (pas 100+) -- réaliste
+        # pour un FPS suffisant.
+        steps = [(90, 50, 210, 150), (130, 50, 170, 150), (170, 50, 130, 150), (210, 50, 90, 150), (250, 50, 50, 150)]
+        for ax, ay, bx, by in steps:
+            tracker.update([make_detection(ax, ay), make_detection(bx, by)])
+
+        final_tracks = tracker.tracks
+        track_a_final = next(t for t in final_tracks if t.track_id == id_a)
+        track_b_final = next(t for t in final_tracks if t.track_id == id_b)
+
+        # A doit finir à droite (250,50) -- toujours identifiable par
+        # son y=50 constant, jamais y=150.
+        assert track_a_final.centroid == (250, 50)
+        assert track_b_final.centroid == (50, 150)
