@@ -28,6 +28,11 @@ class Event:
     zone: Optional[str]
     timestamp: str
     track_id: int
+    # Chemin de la capture annotée associée (voir recorder.py), rempli
+    # APRÈS la création de l'événement par event_engine (qui ne connaît
+    # rien du recorder) -- via dataclasses.replace() dans main.py, pas en
+    # modifiant l'objet original (Event reste immuable, frozen=True).
+    capture_path: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Sérialisation vers un dictionnaire — format prêt pour JSON."""
@@ -38,6 +43,7 @@ class Event:
             "zone": self.zone,
             "timestamp": self.timestamp,
             "trackId": self.track_id,
+            "capturePath": self.capture_path,
         }
 
 
