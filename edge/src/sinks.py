@@ -12,6 +12,8 @@ import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+import paho.mqtt.client as mqtt
+
 from .event_engine import Event
 
 logger = logging.getLogger(__name__)
@@ -81,3 +83,30 @@ class CompositeSink(EventSink):
     def close(self) -> None:
         for sink in self._sinks:
             sink.close()
+
+
+class MqttSink(EventSink):
+    """Publie les événements vers un broker MQTT (Mosquitto).
+
+    Contrat de topic : "edge/{device_id}/events" (configurable), cohérent
+    avec l'architecture définie dès le début du projet -- le backend
+    Spring Boot (à venir) souscrira à ce même topic pour consommer les
+    événements en temps réel.
+    """
+
+    def __init__(self, host: str, port: int, topic: str, device_id: str, qos: int = 1):
+        self._topic = topic.format(device_id=device_id)
+        self._qos = qos
+
+        # client_id explicite : utile pour identifier ce client précis
+        # dans les logs du broker Mosquitto, plutôt qu'un ID aléatoire.
+        self._client = mqtt.Client(client_id=f"edge-sentinel-{device_id}")
+        self._client.connect(host, port)
+        # loop_start() : démarre un thread interne à paho-mqtt qui gère
+        # la boucle réseau (envoi/réception, reconnexion automatique) --
+        # sans ça, publish() bloquerait ou ne fonctionnerait pas de façon
+        # fiable dans une application qui a déjà sa propre boucle
+        # principale (notre run() dans main.py).
+        self._client.loop_start()
+
+        logger.info("MqttSink connecté à %s:%s, topic=%s", host, port, self._topic)
