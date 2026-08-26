@@ -85,3 +85,61 @@ class TestCompositeSink:
 
         lines = path.read_text().splitlines()
         assert len(lines) == 1  # FileSink a bien reçu l'événement
+
+
+class TestMqttSink:
+    """Utilise unittest.mock pour simuler paho-mqtt, sans jamais se
+    connecter à un vrai broker -- tests rapides, isolés, reproductibles."""
+
+    def test_publishes_to_correct_topic_with_device_id_substitution(self, mocker):
+        mock_client_class = mocker.patch("src.sinks.mqtt.Client")
+        mock_client = mock_client_class.return_value
+        mock_client.publish.return_value.rc = 0  # MQTT_ERR_SUCCESS
+
+        from src.sinks import MqttSink
+
+        sink = MqttSink(
+            host="localhost",
+            port=1883,
+            topic="edge/{device_id}/events",
+            device_id="PI-001",
+            qos=1,
+        )
+        event = make_event()
+        sink.publish(event)
+
+        mock_client.publish.assert_called_once()
+        call_args = mock_client.publish.call_args
+        assert call_args[0][0] == "edge/PI-001/events"
+
+    def test_publish_payload_is_valid_json_matching_event(self, mocker):
+        mock_client_class = mocker.patch("src.sinks.mqtt.Client")
+        mock_client = mock_client_class.return_value
+        mock_client.publish.return_value.rc = 0
+
+        from src.sinks import MqttSink
+
+        sink = MqttSink(
+            host="localhost", port=1883, topic="edge/{device_id}/events", device_id="PI-001"
+        )
+        event = make_event(track_id=7, zone="ZONE_A")
+        sink.publish(event)
+
+        payload = mock_client.publish.call_args[0][1]
+        parsed = json.loads(payload)
+        assert parsed["trackId"] == 7
+        assert parsed["eventType"] == "INTRUSION"
+
+    def test_close_stops_loop_and_disconnects(self, mocker):
+        mock_client_class = mocker.patch("src.sinks.mqtt.Client")
+        mock_client = mock_client_class.return_value
+
+        from src.sinks import MqttSink
+
+        sink = MqttSink(
+            host="localhost", port=1883, topic="edge/{device_id}/events", device_id="PI-001"
+        )
+        sink.close()
+
+        mock_client.loop_stop.assert_called_once()
+        mock_client.disconnect.assert_called_once()
