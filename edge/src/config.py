@@ -90,6 +90,7 @@ class RecorderConfig:
     enabled: bool
     output_dir: str
 
+
 @dataclass
 class MqttConfig:
     """Correspond à la section `mqtt:` du fichier YAML."""
@@ -99,6 +100,7 @@ class MqttConfig:
     port: int
     topic: str
     qos: int
+
 
 @dataclass
 class AppConfig:
@@ -189,7 +191,7 @@ class AppConfig:
                     path=raw["sinks"]["file"]["path"],
                 ),
             ),
-                        recorder=RecorderConfig(
+            recorder=RecorderConfig(
                 enabled=raw.get("recorder", {}).get("enabled", False),
                 output_dir=raw.get("recorder", {}).get("output_dir", "captures"),
             ),
