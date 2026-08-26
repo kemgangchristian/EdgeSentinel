@@ -14,6 +14,7 @@ import argparse
 import logging
 import signal
 import time
+from dataclasses import replace
 from types import FrameType
 from typing import Optional
 
@@ -22,7 +23,7 @@ from .config import AppConfig
 from .detector import YoloDetector
 from .event_engine import EventEngine
 from .recorder import EventRecorder
-from .sinks import CompositeSink, ConsoleSink, EventSink, FileSink
+from .sinks import CompositeSink, ConsoleSink, EventSink, FileSink, MqttSink
 from .tracker import CentroidTracker
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,16 @@ def build_sink(config: AppConfig) -> EventSink:
         sinks.append(ConsoleSink())
     if config.sinks.file.enabled:
         sinks.append(FileSink(config.sinks.file.path))
+    if config.mqtt.enabled:
+        sinks.append(
+            MqttSink(
+                host=config.mqtt.host,
+                port=config.mqtt.port,
+                topic=config.mqtt.topic,
+                device_id=config.device_id,
+                qos=config.mqtt.qos,
+            )
+        )
 
     if not sinks:
         logger.warning("Aucun sink actif : les événements ne seront nulle part visibles.")
@@ -126,14 +137,19 @@ def run(config_path: str) -> None:
                 events = event_engine.process(tracks)
 
                 for event in events:
-                    sink.publish(event)
+                    # On enregistre la capture AVANT de publier, pour
+                    # pouvoir inclure son chemin dans l'événement publié
+                    # (utile au backend pour retrouver la preuve visuelle
+                    # associée à un événement MQTT reçu).
                     if recorder is not None:
-                        # Retrouve le track correspondant à cet événement
-                        # pour disposer de sa bbox (l'Event ne contient
-                        # volontairement pas de coordonnées géométriques).
                         track = next((t for t in tracks if t.track_id == event.track_id), None)
                         if track is not None:
-                            recorder.record(frame, track, event)
+                            capture_path = recorder.record(frame, track, event)
+                            # Event est immuable (frozen=True) : on ne le
+                            # modifie jamais, on produit une NOUVELLE
+                            # instance enrichie via dataclasses.replace().
+                            event = replace(event, capture_path=str(capture_path))
+                    sink.publish(event)
 
                 frame_count += 1
                 if frame_count % 100 == 0:
