@@ -37,7 +37,7 @@ pipeline {
                     sh '''
                         export HOME=/tmp
                         export PIP_CACHE_DIR=/tmp/pip-cache
-                        pip install --user -q -r requirements-dev.txt
+                        pip install --user -q --timeout 120 --retries 5 -r requirements-dev.txt
                         export PATH=$HOME/.local/bin:$PATH
                         black --check src
                         flake8 src
