@@ -65,7 +65,7 @@ logging:
   level: "INFO"
 
 mqtt:
-  enabled: true
+  enabled: false
   # Host du broker Mosquitto. "localhost" convient en Dev (le conteneur
   # expose le port 1883 sur la machine hôte). En Prod, ce sera l'adresse
   # réelle du broker.
