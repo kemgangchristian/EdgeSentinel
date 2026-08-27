@@ -4,8 +4,11 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
+import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
+import org.springframework.messaging.MessageChannel;
 
 /**
  * Configuration Spring Integration pour la consommation des événements MQTT
@@ -39,5 +42,22 @@ public class MqttConsumerConfig {
         options.setCleanSession(true);
         factory.setConnectionOptions(options);
         return factory;
+    }
+
+    @Bean
+    public MqttPahoMessageDrivenChannelAdapter mqttInboundAdapter() {
+        MqttPahoMessageDrivenChannelAdapter adapter =
+                new MqttPahoMessageDrivenChannelAdapter(clientId, mqttClientFactory(), topic);
+        // QoS 1 côté consommateur également, cohérent avec la publication
+        // QoS 1 déjà configurée côté agent Edge (config.yaml, section mqtt).
+        adapter.setQos(1);
+        adapter.setCompletionTimeout(5000);
+        adapter.setOutputChannel(mqttInputChannel());
+        return adapter;
+    }
+
+    @Bean
+    public MessageChannel mqttInputChannel() {
+        return new DirectChannel();
     }
 }
