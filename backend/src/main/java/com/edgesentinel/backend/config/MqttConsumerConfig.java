@@ -4,8 +4,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.integration.mqtt.support.DefaultMqttPahoClientFactory;
-import org.springframework.integration.mqtt.support.MqttPahoClientFactory;
+import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
+import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 
 /**
  * Configuration Spring Integration pour la consommation des événements MQTT
