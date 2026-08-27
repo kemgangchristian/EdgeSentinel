@@ -42,9 +42,60 @@ public class EdgeEvent {
     @Column(name = "capture_path")
     private String capturePath;
 
-    // Constructeur par défaut requis par JPA/Hibernate -- jamais appelé
+        // Constructeur par défaut requis par JPA/Hibernate -- jamais appelé
     // directement dans notre code, mais le framework en a besoin pour
     // reconstruire les objets depuis la base.
     protected EdgeEvent() {
+    }
+
+    // Constructeur utilisé par notre code (le listener) pour créer une
+    // instance à partir du JSON désérialisé, avant persistance.
+    public EdgeEvent(
+            String deviceId,
+            String eventType,
+            Double confidence,
+            String zone,
+            String timestamp,
+            Integer trackId,
+            String capturePath) {
+        this.deviceId = deviceId;
+        this.eventType = eventType;
+        this.confidence = confidence;
+        this.zone = zone;
+        this.timestamp = timestamp;
+        this.trackId = trackId;
+        this.capturePath = capturePath;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public Double getConfidence() {
+        return confidence;
+    }
+
+    public String getZone() {
+        return zone;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public Integer getTrackId() {
+        return trackId;
+    }
+
+    public String getCapturePath() {
+        return capturePath;
     }
 }
