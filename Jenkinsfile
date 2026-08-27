@@ -47,6 +47,26 @@ pipeline {
             }
         }
 
+        stage('Backend: Build & Tests') {
+            // Ce stage a besoin de Java/Maven — image Docker dédiée,
+            // même principe que le stage Python : Jenkins orchestre,
+            // il n'exécute jamais directement les outils d'une techno.
+            agent {
+                docker {
+                    image 'maven:3.9-eclipse-temurin-17'
+                    reuseNode true
+                }
+            }
+            steps {
+                echo "Build et tests du backend Spring Boot"
+                dir('backend') {
+                    sh '''
+                        ./mvnw -B clean verify
+                    '''
+                }
+            }
+        }
+
         stage('Build Docker') {
             steps {
                 echo "[placeholder] Ici viendra le build des images Docker"
