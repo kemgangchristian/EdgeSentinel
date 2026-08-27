@@ -62,6 +62,7 @@ pipeline {
                 echo "Build et tests du backend Spring Boot"
                 dir('backend') {
                     sh '''
+                        export TESTCONTAINERS_RYUK_DISABLED=true
                         ./mvnw -B clean verify
                     '''
                 }
