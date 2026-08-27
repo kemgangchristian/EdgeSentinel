@@ -2,8 +2,8 @@ package com.edgesentinel.backend.listener;
 
 import com.edgesentinel.backend.entity.EdgeEvent;
 import com.edgesentinel.backend.repository.EdgeEventRepository;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -37,13 +37,13 @@ public class EdgeEventListener {
             JsonNode node = objectMapper.readTree(payload);
 
             EdgeEvent event = new EdgeEvent(
-                    node.get("deviceId").asText(),
-                    node.get("eventType").asText(),
-                    node.get("confidence").asDouble(),
-                    node.hasNonNull("zone") ? node.get("zone").asText() : null,
-                    node.get("timestamp").asText(),
-                    node.get("trackId").asInt(),
-                    node.hasNonNull("capturePath") ? node.get("capturePath").asText() : null
+                node.get("deviceId").asString(),
+                node.get("eventType").asString(),
+                node.get("confidence").asDouble(),
+                node.hasNonNull("zone") ? node.get("zone").asString() : null,
+                node.get("timestamp").asString(),
+                node.get("trackId").asInt(),
+                node.hasNonNull("capturePath") ? node.get("capturePath").asString() : null
             );
 
             repository.save(event);
