@@ -46,12 +46,7 @@ pipeline {
                 }
             }
         }
-
         stage('Backend: Build & Tests') {
-            // Ce stage a besoin de Java/Maven — image Docker dédiée,
-            // même principe que le stage Python : Jenkins orchestre,
-            // il n'exécute jamais directement les outils d'une techno.
-                    stage('Backend: Build & Tests') {
             // args monte le socket Docker de l'hôte à l'intérieur de ce
             // conteneur Maven, pour que Testcontainers puisse démarrer
             // ses propres conteneurs éphémères (PostgreSQL de test) --
