@@ -46,7 +46,7 @@ pipeline {
                 }
             }
         }
-        stage('Backend: Build & Tests') {
+                stage('Backend: Build & Tests') {
             // args monte le socket Docker de l'hôte à l'intérieur de ce
             // conteneur Maven, pour que Testcontainers puisse démarrer
             // ses propres conteneurs éphémères (PostgreSQL de test) --
@@ -58,16 +58,23 @@ pipeline {
                     reuseNode true
                 }
             }
+            // Variable d'environnement injectée par Jenkins lui-même sur
+            // tout le processus "sh", garantissant sa transmission jusqu'à
+            // la JVM Surefire forkée par Maven pour exécuter les tests
+            // (contrairement à un "export" dans le script shell, qui peut
+            // se perdre selon comment Maven fork ses sous-process).
+            environment {
+                TESTCONTAINERS_RYUK_DISABLED = 'true'
+            }
             steps {
                 echo "Build et tests du backend Spring Boot"
                 dir('backend') {
                     sh '''
-                        ./mvnw -B clean verify -Dtestcontainers.ryuk.disabled=true
+                        ./mvnw -B clean verify
                     '''
                 }
             }
         }
-
         stage('Build Docker') {
             steps {
                 echo "[placeholder] Ici viendra le build des images Docker"
