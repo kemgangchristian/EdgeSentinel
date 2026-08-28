@@ -65,10 +65,17 @@ pipeline {
             // se perdre selon comment Maven fork ses sous-process).
             environment {
                 TESTCONTAINERS_RYUK_DISABLED = 'true'
-                TESTCONTAINERS_HOST_OVERRIDE = 'host.docker.internal'
             }
             steps {
                 echo "Build et tests du backend Spring Boot"
+
+                sh '''
+                    whoami
+                    ls -l /var/run/docker.sock || true
+                    docker version
+                    docker info
+                '''
+
                 dir('backend') {
                     sh '''
                         ./mvnw -B clean verify
