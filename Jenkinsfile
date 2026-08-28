@@ -65,6 +65,7 @@ pipeline {
             // se perdre selon comment Maven fork ses sous-process).
             environment {
                 TESTCONTAINERS_RYUK_DISABLED = 'true'
+                TESTCONTAINERS_HOST_OVERRIDE = 'host.docker.internal'
             }
             steps {
                 echo "Build et tests du backend Spring Boot"
