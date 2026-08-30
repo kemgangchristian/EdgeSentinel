@@ -37,11 +37,40 @@ pipeline {
                     sh '''
                         export HOME=/tmp
                         export PIP_CACHE_DIR=/tmp/pip-cache
-                        pip install --user -q -r requirements-dev.txt
+                        pip install --user -q --timeout 60 --retries 3 -r requirements-ci.txt
                         export PATH=$HOME/.local/bin:$PATH
                         black --check src
                         flake8 src
                         pytest tests/ -v
+                    '''
+                }
+            }
+        }
+
+        stage('Backend: Build & Tests') {
+            // Maven/Java sont maintenant installés DIRECTEMENT dans
+            // l'image Jenkins (infra/jenkins/Dockerfile), pas dans un
+            // sous-conteneur Docker séparé. Testcontainers n'a ainsi
+            // qu'un seul niveau de Docker-outside-of-Docker à gérer
+            // (le conteneur Jenkins parle au démon de l'hôte via le
+            // socket monté) -- exactement le pattern que Testcontainers
+            // documente et supporte le mieux, contrairement à un
+            // conteneur Maven imbriqué en sibling d'un conteneur Jenkins
+            // lui-même en sibling du démon hôte (3 niveaux, fragile).
+            environment {
+                TESTCONTAINERS_RYUK_DISABLED = 'true'
+            }
+            steps {
+                echo "Build et tests du backend Spring Boot"
+                sh '''
+                    whoami
+                    java -version
+                    mvn -version
+                    docker version
+                '''
+                dir('backend') {
+                    sh '''
+                        mvn -B clean verify
                     '''
                 }
             }

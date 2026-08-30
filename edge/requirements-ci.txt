@@ -1,0 +1,16 @@
+# Dépendances minimales pour le stage CI (lint + tests), SANS torch/
+# ultralytics -- ces derniers ne sont jamais réellement utilisés par
+# black/flake8/pytest (aucun test n'instancie YoloDetector, qui fait un
+# import différé d'Ultralytics jamais déclenché en test). Ce fichier
+# évite de télécharger ~150 Mo inutiles à chaque build CI, ce qui causait
+# des timeouts réseau intermittents.
+PyYAML==6.0.2
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+scipy==1.13.1
+paho-mqtt==1.6.1
+
+pytest==8.3.3
+pytest-mock==3.14.0
+black==24.8.0
+flake8==7.1.1

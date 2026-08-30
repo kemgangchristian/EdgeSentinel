@@ -12,6 +12,11 @@ services:
     image: eclipse-mosquitto:2.0
     container_name: edge-ai-mosquitto
 
+  
+  postgres:
+    image: postgres:16
+    container_name: edge-ai-postgres
+
 networks:
   edge-ai-network:
     driver: bridge

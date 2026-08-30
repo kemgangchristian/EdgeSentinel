@@ -11,7 +11,26 @@ services:
       - ./dev/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
       - edge-ai-network
+  
+  postgres:
+    environment:
+      # Identifiants Dev en clair, assumé pour cet environnement uniquement
+      # -- jamais en Staging/Prod, où on passera par des secrets.
+      POSTGRES_DB: edgesentinel
+      POSTGRES_USER: edgesentinel
+      POSTGRES_PASSWORD: edgesentinel_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      # Volume nommé : les données persistent entre redémarrages du
+      # conteneur (contrairement à un volume anonyme, perdu au "down -v").
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - edge-ai-network
 
 networks:
   edge-ai-network:
     name: edge-ai-dev-network
+
+volumes:
+  postgres_data:
