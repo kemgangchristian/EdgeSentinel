@@ -1,23 +1,27 @@
 # *******************************************************
 # infra/jenkins/Dockerfile
 #
-# Étend l'image officielle Jenkins pour y ajouter le client Docker (CLI).
-# Nécessaire pour que les stages Jenkinsfile utilisant "agent { docker {...} }"
-# ou "docker build" puissent piloter le démon Docker de la machine hôte
-# (via /var/run/docker.sock, déjà monté dans docker-compose.yml).
+# Étend l'image officielle Jenkins pour y ajouter :
+# - le client Docker (CLI), pour piloter le démon Docker de la machine
+#   hôte via /var/run/docker.sock (déjà monté dans docker-compose.yml)
+# - Java 17 + Maven, installés DIRECTEMENT dans cette image plutôt que
+#   dans un sous-conteneur Docker séparé -- évite un Docker-in-Docker à
+#   plusieurs niveaux, source de multiples problèmes avec Testcontainers
+#   (self-détection du conteneur, résolution réseau des conteneurs
+#   éphémères créés pendant les tests).
 # *******************************************************
 
 FROM jenkins/jenkins:lts-jdk17
 
-# Passage root temporaire pour installer un paquet système - Jenkins revient
-# à un utilisateur non-root ensuite (bonne pratique de sécurité standard).
 USER root
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
-        gnupg && \
+        gnupg \
+        openjdk-17-jdk \
+        maven && \
     install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     chmod a+r /etc/apt/keyrings/docker.gpg && \

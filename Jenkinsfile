@@ -46,43 +46,36 @@ pipeline {
                 }
             }
         }
-                stage('Backend: Build & Tests') {
-            // args monte le socket Docker de l'hôte à l'intérieur de ce
-            // conteneur Maven, pour que Testcontainers puisse démarrer
-            // ses propres conteneurs éphémères (PostgreSQL de test) --
-            // même principe Docker-in-Docker que pour Jenkins lui-même.
-            agent {
-                docker {
-                    image 'maven:3.9-eclipse-temurin-17'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                    reuseNode true
-                }
-            }
-            // Variable d'environnement injectée par Jenkins lui-même sur
-            // tout le processus "sh", garantissant sa transmission jusqu'à
-            // la JVM Surefire forkée par Maven pour exécuter les tests
-            // (contrairement à un "export" dans le script shell, qui peut
-            // se perdre selon comment Maven fork ses sous-process).
+
+        stage('Backend: Build & Tests') {
+            // Maven/Java sont maintenant installés DIRECTEMENT dans
+            // l'image Jenkins (infra/jenkins/Dockerfile), pas dans un
+            // sous-conteneur Docker séparé. Testcontainers n'a ainsi
+            // qu'un seul niveau de Docker-outside-of-Docker à gérer
+            // (le conteneur Jenkins parle au démon de l'hôte via le
+            // socket monté) -- exactement le pattern que Testcontainers
+            // documente et supporte le mieux, contrairement à un
+            // conteneur Maven imbriqué en sibling d'un conteneur Jenkins
+            // lui-même en sibling du démon hôte (3 niveaux, fragile).
             environment {
                 TESTCONTAINERS_RYUK_DISABLED = 'true'
             }
             steps {
                 echo "Build et tests du backend Spring Boot"
-
                 sh '''
                     whoami
-                    ls -l /var/run/docker.sock || true
+                    java -version
+                    mvn -version
                     docker version
-                    docker info
                 '''
-
                 dir('backend') {
                     sh '''
-                        ./mvnw -B clean verify
+                        mvn -B clean verify
                     '''
                 }
             }
         }
+
         stage('Build Docker') {
             steps {
                 echo "[placeholder] Ici viendra le build des images Docker"
