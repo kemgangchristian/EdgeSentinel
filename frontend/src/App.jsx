@@ -74,28 +74,40 @@ function EventRow({ event, isLatest, showDevice }) {
 
 function App() {
   const [events, setEvents] = useState([])
+  // 'loading' est déjà l'état initial par défaut -- inutile de le
+  // re-déclencher au montage, ce qui évite tout appel setState avant le
+  // premier "await" dans l'effet de chargement initial (voir loadEvents).
   const [status, setStatus] = useState('loading') // loading | ready | error
   const [errorMessage, setErrorMessage] = useState('')
 
-  const loadEvents = useCallback(() => {
-    setStatus('loading')
-    fetch(`${API_BASE_URL}/api/events`)
-      .then((response) => {
-        if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`)
-        return response.json()
-      })
-      .then((data) => {
-        setEvents(data.content)
-        setStatus('ready')
-      })
-      .catch((err) => {
-        setErrorMessage(err.message)
-        setStatus('error')
-      })
+  // Aucun setState avant le premier "await" : la règle ESLint
+  // react-hooks/set-state-in-effect interdit tout appel setState dans le
+  // corps SYNCHRONE d'un effet -- y compris via une fonction async
+  // invoquée directement, tant qu'il précède le premier "await".
+  const loadEvents = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/events`)
+      if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`)
+      const data = await response.json()
+      setEvents(data.content)
+      setStatus('ready')
+    } catch (err) {
+      setErrorMessage(err.message)
+      setStatus('error')
+    }
   }, [])
 
+  // Le clic sur "Actualiser" n'est PAS un effet -- la règle ne s'y
+  // applique pas, on peut y déclencher setStatus('loading') librement
+  // pour donner un retour visuel immédiat.
+  const handleRefresh = useCallback(() => {
+    setStatus('loading')
+    void loadEvents()
+  }, [loadEvents])
+
   useEffect(() => {
-    loadEvents()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadEvents()
   }, [loadEvents])
 
   const { intrusionCount, detectionCount, showDevice } = useMemo(() => {
@@ -117,7 +129,7 @@ function App() {
           <h1 className="app-header__wordmark">EdgeSentinel</h1>
           <p className="app-header__tagline">Surveillance caméra Edge</p>
         </div>
-        <button className="refresh-button" onClick={loadEvents} disabled={status === 'loading'}>
+        <button className="refresh-button" onClick={handleRefresh} disabled={status === 'loading'}>
           {status === 'loading' ? 'Actualisation…' : 'Actualiser'}
         </button>
       </header>
@@ -143,7 +155,7 @@ function App() {
 
         {status === 'error' && (
           <p className="state-message state-message--error">
-            Impossible de joindre le backend. Vérifiez qu'il tourne sur {API_BASE_URL}.
+            Impossible de joindre le backend ({errorMessage}). Vérifiez qu'il tourne sur {API_BASE_URL}.
           </p>
         )}
 
