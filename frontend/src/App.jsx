@@ -16,14 +16,24 @@ function relativeTime(isoString) {
   return relativeFormatter.format(diffDays, 'day')
 }
 
+// "ZONE_A" -> "Zone A" : l'identifiant technique de config.yaml n'est pas
+// ce qu'un utilisateur doit lire tel quel.
+function formatZone(zone) {
+  return zone
+    .toLowerCase()
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
 function eventLabel(event) {
   if (event.eventType === 'INTRUSION') {
-    return event.zone ? `Intrusion détectée en ${event.zone}` : 'Intrusion détectée'
+    return event.zone ? `Intrusion détectée en ${formatZone(event.zone)}` : 'Intrusion détectée'
   }
   return 'Personne détectée'
 }
 
-function EventRow({ event, isLatest }) {
+function EventRow({ event, isLatest, showDevice }) {
   const isIntrusion = event.eventType === 'INTRUSION'
   const confidencePct = Math.round(event.confidence * 100)
 
@@ -32,7 +42,7 @@ function EventRow({ event, isLatest }) {
       <div className="event-row__main">
         {isLatest && <span className="event-row__pulse" aria-hidden="true" />}
         <span className="event-row__label">{eventLabel(event)}</span>
-        <span className="event-row__device">{event.deviceId}</span>
+        {showDevice && <span className="event-row__device">{event.deviceId}</span>}
       </div>
       <div className="event-row__meta">
         <time className="event-row__time" dateTime={event.timestamp} title={event.timestamp}>
@@ -70,14 +80,15 @@ function App() {
     loadEvents()
   }, [loadEvents])
 
-  const { intrusionCount, detectionCount } = useMemo(() => {
+  const { intrusionCount, detectionCount, showDevice } = useMemo(() => {
+    const uniqueDevices = new Set(events.map((event) => event.deviceId))
     return events.reduce(
       (acc, event) => {
         if (event.eventType === 'INTRUSION') acc.intrusionCount += 1
         else acc.detectionCount += 1
         return acc
       },
-      { intrusionCount: 0, detectionCount: 0 }
+      { intrusionCount: 0, detectionCount: 0, showDevice: uniqueDevices.size > 1 }
     )
   }, [events])
 
@@ -127,7 +138,7 @@ function App() {
         {events.length > 0 && (
           <ul className="event-feed">
             {events.map((event, index) => (
-              <EventRow key={event.id} event={event} isLatest={index === 0} />
+              <EventRow key={event.id} event={event} isLatest={index === 0} showDevice={showDevice} />
             ))}
           </ul>
         )}
