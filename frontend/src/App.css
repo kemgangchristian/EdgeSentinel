@@ -118,9 +118,8 @@
 .event-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.875rem 0 0.875rem 1rem;
+  gap: 0.875rem;
+  padding: 0.75rem 1rem 0.75rem 1rem;
   border-bottom: 1px solid var(--border);
   border-left: 3px solid transparent;
 }
@@ -133,11 +132,21 @@
   border-left-color: var(--detected);
 }
 
+.event-row__thumbnail {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
 .event-row__main {
   display: flex;
   align-items: baseline;
   gap: 0.625rem;
   min-width: 0;
+  flex: 1;
 }
 
 .event-row__pulse {
@@ -173,6 +182,7 @@
   align-items: center;
   gap: 0.875rem;
   flex-shrink: 0;
+  margin-left: auto;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.8125rem;
   color: var(--text-muted);
@@ -203,10 +213,16 @@
   .event-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.375rem;
+    gap: 0.5rem;
+  }
+
+  .event-row__thumbnail {
+    width: 100%;
+    height: 120px;
   }
 
   .event-row__meta {
-    padding-left: 1rem;
+    margin-left: 0;
+    padding-left: 0;
   }
 }

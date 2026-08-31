@@ -26,6 +26,15 @@ function formatZone(zone) {
     .join(' ')
 }
 
+// "captures/PI-001_....jpg" -> "PI-001_....jpg" : le champ stocké en base
+// garde le chemin relatif complet (utile pour l'agent Edge), mais notre
+// route HTTP /captures/** ne veut que le nom de fichier.
+function captureUrl(capturePath) {
+  if (!capturePath) return null
+  const filename = capturePath.split('/').pop()
+  return `${API_BASE_URL}/captures/${filename}`
+}
+
 function eventLabel(event) {
   if (event.eventType === 'INTRUSION') {
     return event.zone ? `Intrusion détectée en ${formatZone(event.zone)}` : 'Intrusion détectée'
@@ -36,9 +45,18 @@ function eventLabel(event) {
 function EventRow({ event, isLatest, showDevice }) {
   const isIntrusion = event.eventType === 'INTRUSION'
   const confidencePct = Math.round(event.confidence * 100)
+  const thumbnailUrl = captureUrl(event.capturePath)
 
   return (
     <li className={`event-row ${isIntrusion ? 'event-row--intrusion' : 'event-row--detected'}`}>
+      {thumbnailUrl && (
+        <img
+          className="event-row__thumbnail"
+          src={thumbnailUrl}
+          alt={eventLabel(event)}
+          loading="lazy"
+        />
+      )}
       <div className="event-row__main">
         {isLatest && <span className="event-row__pulse" aria-hidden="true" />}
         <span className="event-row__label">{eventLabel(event)}</span>
