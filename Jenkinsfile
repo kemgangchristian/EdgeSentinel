@@ -76,6 +76,28 @@ pipeline {
             }
         }
 
+        stage('Frontend: Build & Lint') {
+            // Node.js/npm dans un conteneur dédié, même principe que les
+            // stages Python et Java : Jenkins orchestre, chaque techno a
+            // son environnement isolé et reproductible.
+            agent {
+                docker {
+                    image 'node:20-slim'
+                    reuseNode true
+                }
+            }
+            steps {
+                echo "Lint et build du frontend React"
+                dir('frontend') {
+                    sh '''
+                        npm ci
+                        npm run lint
+                        npm run build
+                    '''
+                }
+            }
+        }
+
         stage('Build Docker') {
             steps {
                 echo "[placeholder] Ici viendra le build des images Docker"

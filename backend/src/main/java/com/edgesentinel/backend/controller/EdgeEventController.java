@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/events")
+// Autorise le frontend Vite (Dev, port 5173) à consommer cette API depuis
+// une origine différente. En Prod, cette liste devra être restreinte au
+// vrai domaine du frontend déployé, jamais laissée ouverte à "*".
+@CrossOrigin(origins = "http://localhost:5173")
 public class EdgeEventController {
 
     private final EdgeEventRepository repository;
