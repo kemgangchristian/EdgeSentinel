@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { Client } from '@stomp/stompjs'
+import SockJS from 'sockjs-client'
 import './App.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const WS_URL = `${API_BASE_URL}/ws`
 
 const relativeFormatter = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' })
 
@@ -79,6 +82,7 @@ function App() {
   // premier "await" dans l'effet de chargement initial (voir loadEvents).
   const [status, setStatus] = useState('loading') // loading | ready | error
   const [errorMessage, setErrorMessage] = useState('')
+  const [isLive, setIsLive] = useState(false)
 
   // Aucun setState avant le premier "await" : la règle ESLint
   // react-hooks/set-state-in-effect interdit tout appel setState dans le
@@ -110,6 +114,35 @@ function App() {
     void loadEvents()
   }, [loadEvents])
 
+
+  // Connexion WebSocket/STOMP : diffusion en direct des nouveaux
+  // événements, en complément (pas en remplacement) du chargement initial
+  // par REST. Effect avec cleanup -- se désabonne proprement si le
+  // composant est démonté, évite les fuites de connexion.
+  useEffect(() => {
+    const client = new Client({
+      webSocketFactory: () => new SockJS(WS_URL),
+      reconnectDelay: 5000,
+      onConnect: () => {
+        setIsLive(true)
+        client.subscribe('/topic/events', (message) => {
+          const newEvent = JSON.parse(message.body)
+          // Ajoute le nouvel événement en tête, sans dépasser 20 éléments
+          // affichés -- cohérent avec la pagination REST initiale.
+          setEvents((previous) => [newEvent, ...previous].slice(0, 20))
+        })
+      },
+      onDisconnect: () => setIsLive(false),
+      onWebSocketClose: () => setIsLive(false),
+    })
+
+    client.activate()
+
+    return () => {
+      void client.deactivate()
+    }
+  }, [])
+
   const { intrusionCount, detectionCount, showDevice } = useMemo(() => {
     const uniqueDevices = new Set(events.map((event) => event.deviceId))
     return events.reduce(
@@ -129,9 +162,17 @@ function App() {
           <h1 className="app-header__wordmark">EdgeSentinel</h1>
           <p className="app-header__tagline">Surveillance caméra Edge</p>
         </div>
-        <button className="refresh-button" onClick={handleRefresh} disabled={status === 'loading'}>
-          {status === 'loading' ? 'Actualisation…' : 'Actualiser'}
-        </button>
+        <div className="app-header__actions">
+          {isLive && (
+            <span className="live-indicator">
+              <span className="live-indicator__dot" aria-hidden="true" />
+              Live
+            </span>
+          )}
+          <button className="refresh-button" onClick={handleRefresh} disabled={status === 'loading'}>
+            {status === 'loading' ? 'Actualisation…' : 'Actualiser'}
+          </button>
+        </div>
       </header>
 
       {status === 'ready' && events.length > 0 && (

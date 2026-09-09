@@ -22,6 +22,29 @@
   margin-bottom: 1.5rem;
 }
 
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--detected);
+}
+
+.live-indicator__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--detected);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
 .app-header__wordmark {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
@@ -201,6 +224,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .event-row__pulse {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-indicator__dot {
     animation: none;
   }
 }
