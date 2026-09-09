@@ -43,9 +43,10 @@ class EventRecorder:
         annotated = frame.copy()
 
         x1, y1, x2, y2 = track.bbox
-        # Couleur au format BGR (pas RGB -- convention OpenCV historique) :
-        # rouge pour une intrusion (alerte), vert pour une simple détection.
-        color = (0, 0, 255) if event.event_type == "INTRUSION" else (0, 200, 0)
+        # Mêmes couleurs que le dashboard frontend (App.css: --intrusion,
+        # --detected) -- cohérence visuelle de bout en bout, de la capture
+        # brute jusqu'à l'interface, pas deux palettes différentes.
+        color = (84, 91, 255) if event.event_type == "INTRUSION" else (176, 216, 79)
 
         cv2.rectangle(annotated, (x1, y1), (x2, y2), color, thickness=2)
 
