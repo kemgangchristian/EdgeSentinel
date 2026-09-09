@@ -9,7 +9,7 @@
 }
 
 .app {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
 }
@@ -20,6 +20,21 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.app-header__wordmark {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--text);
+}
+
+.app-header__tagline {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 .app-header__actions {
@@ -43,21 +58,6 @@
   border-radius: 50%;
   background: var(--detected);
   animation: pulse 1.8s ease-in-out infinite;
-}
-
-.app-header__wordmark {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  font-size: 1.75rem;
-  letter-spacing: -0.01em;
-  margin: 0;
-  color: var(--text);
-}
-
-.app-header__tagline {
-  margin: 0.25rem 0 0;
-  color: var(--text-muted);
-  font-size: 0.875rem;
 }
 
 .refresh-button {
@@ -141,8 +141,8 @@
 .event-row {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
-  padding: 0.75rem 1rem 0.75rem 1rem;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--border);
   border-left: 3px solid transparent;
 }
@@ -155,13 +155,29 @@
   border-left-color: var(--detected);
 }
 
-.event-row__thumbnail {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 4px;
+.event-row__thumbnail-link {
+  display: block;
   flex-shrink: 0;
+  border-radius: 8px;
+  outline-offset: 2px;
+}
+
+.event-row__thumbnail-link:focus-visible {
+  outline: 2px solid var(--detected);
+}
+
+.event-row__thumbnail {
+  display: block;
+  width: 128px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
   background: var(--surface);
+  transition: transform 0.15s ease;
+}
+
+.event-row__thumbnail-link:hover .event-row__thumbnail {
+  transform: scale(1.03);
 }
 
 .event-row__main {
@@ -223,35 +239,32 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .event-row__pulse {
-    animation: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
+  .event-row__pulse,
   .live-indicator__dot {
     animation: none;
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 560px) {
   .app-header {
     flex-direction: column;
   }
 
   .event-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .event-row__thumbnail-link {
+    width: 100%;
   }
 
   .event-row__thumbnail {
     width: 100%;
-    height: 120px;
+    aspect-ratio: 16 / 9;
   }
 
   .event-row__meta {
     margin-left: 0;
-    padding-left: 0;
+    padding-left: calc(1px);
   }
 }

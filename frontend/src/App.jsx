@@ -53,12 +53,20 @@ function EventRow({ event, isLatest, showDevice }) {
   return (
     <li className={`event-row ${isIntrusion ? 'event-row--intrusion' : 'event-row--detected'}`}>
       {thumbnailUrl && (
-        <img
-          className="event-row__thumbnail"
-          src={thumbnailUrl}
-          alt={eventLabel(event)}
-          loading="lazy"
-        />
+        <a
+          className="event-row__thumbnail-link"
+          href={thumbnailUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Voir la capture en taille réelle"
+        >
+          <img
+            className="event-row__thumbnail"
+            src={thumbnailUrl}
+            alt={eventLabel(event)}
+            loading="lazy"
+          />
+        </a>
       )}
       <div className="event-row__main">
         {isLatest && <span className="event-row__pulse" aria-hidden="true" />}
@@ -110,10 +118,15 @@ function App() {
   }, [loadEvents])
 
   useEffect(() => {
+    // Le fetch de données au montage est un cas d'usage officiellement
+    // validé pour useEffect (React docs: "You Might Not Need an Effect").
+    // La règle react-hooks/set-state-in-effect (nouvelle, issue du React
+    // Compiler) a des faux positifs reconnus sur ce pattern précis --
+    // voir https://github.com/facebook/react/issues/34743 (ouverte par
+    // l'équipe React elle-même, non résolue à ce jour).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadEvents()
   }, [loadEvents])
-
 
   // Connexion WebSocket/STOMP : diffusion en direct des nouveaux
   // événements, en complément (pas en remplacement) du chargement initial
